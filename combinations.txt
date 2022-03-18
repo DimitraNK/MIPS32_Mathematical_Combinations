@@ -1,0 +1,120 @@
+
+		.text
+		.globl run
+run:	
+		la $a0,txt_n
+		li $v0,4 # "Enter number of objects in the set (n): "
+		syscall # to screen.
+		
+		li $v0,5 # Read int n. 
+		syscall
+		
+		move $t0,$v0 # Input (n) to $t0.
+		
+		la $a0,txt_k
+		li $v0,4 # "Enter number to be chosen (k): "
+		syscall   # to screen.
+		
+		li $v0,5 # Read int k. 
+		syscall
+		
+		move $t1,$v0 # Input (k) to $t1.
+		
+		# if (n<k || k<0) go to ELSE
+		
+		blt $t0,$t1,ELSE  
+		bltz $t1,ELSE
+		
+		# if (n>=k && k>=0)
+		
+		# println("C("+n+", "+k+") = "+combinations(n, k));
+		la $a0,txt_c1
+		li $v0,4 # "C("
+		syscall
+		
+		li $v0,1 # Print integer n.
+		move $a0, $t0 
+		syscall
+		
+		
+		la $a0,txt_c2
+		li $v0,4 # ", "
+		syscall
+		
+		li $v0,1 # Print integer k.
+		move $a0,$t1
+		syscall
+		
+		
+		la $a0,txt_c3
+		li $v0,4 # ") = "
+		syscall
+		
+		move $a0,$t0 # Sending parameters to combinations.
+		move $a1,$t1
+		
+		jal combinations  # Jump to combinations to calculate C(n,k).
+		move $a0,$v0 # Register $v0 holds the result.
+		li $v0,1 # Print  the value of C(n,k).
+		syscall
+		
+		# New line because println() is used.
+		la $a0,new_line
+		li $v0,4
+		syscall
+		
+		li $v0,10 # Exit the program.
+		syscall
+		
+ELSE:	la $a0,txt_el
+		li $v0,4 # println("Please enter n >= k >= 0");
+		syscall # to screen.
+		
+		li $v0,10 # Exit the program.
+		syscall
+		
+		
+combinations:
+		move $v0,$a0 # parameter n.
+		move $v1,$a1 # parameter k.
+		li $t1,1 # int factorial_n = 1;
+		li $t0,1 # i=1;
+		
+		# for loop for factorial_n.
+loop1:	bgt $t0,$a0,exit1 # if i>n ($t0>$a0) go to exit1.
+		mul $t1,$t1,$t0 # factorial_n *= i;
+		addi $t0,$t0,1 # i++;
+		j loop1 
+
+exit1:	li $t2,1 # int factorial_k = 1;
+		li $t0,1 # i=1;
+		
+		# for loop for factorial_k.
+loop2:	bgt $t0,$a1,exit2 # if i>k ($t0>$a1) go to exit2.
+		mul $t2,$t2,$t0 # factorial_k *= i;
+		addi $t0,$t0,1 # i++;
+		j loop2
+		
+exit2:	li $t3,1 # int factorial_n_k = 1;
+		li $t0,1 # i=1;
+		sub $t4,$a0,$a1 # n-k (the value in $a0 minus the value in $a1) to $t4.
+		
+		# for loop for factorial_n_k.
+loop3:	bgt $t0,$t4,exit3 # if i>(n-k) ($t0>$t4) go to exit3.
+		mul $t3,$t3,$t0 # factorial_n_k *= i;
+		addi $t0,$t0,1 # i++;
+		j loop3
+	
+exit3:	mul $t3,$t3,$t2 # (factorial_k*factorial_n_k)
+		div $t0,$t1,$t3 # factorial_n / (factorial_k*factorial_n_k)
+		add $v0,$t0,$zero # the value of $t0 to $v0.
+		j $ra # Return to the calling function (run).
+		
+		.data 
+txt_n:	.asciiz "Enter number of objects in the set (n): "
+txt_k:	.asciiz "Enter number to be chosen (k): "
+txt_el:	.asciiz "Please enter n >= k >= 0\n"	
+txt_c1:	.asciiz "C("
+txt_c2:	.asciiz ", "
+txt_c3:	.asciiz ") = "
+new_line:	.asciiz "\n"
